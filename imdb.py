@@ -4,55 +4,59 @@ import numpy as np
 
 
 """Removes punctuation, parentheses, question marks, etc., and leaves only alphanumeric characters"""
-def cleanLine(line):
-    return re.sub('[^A-Za-z0-9 ]+', '', line.lower())
+def clean_string(string):
+    return re.sub('[^A-Za-z0-9 ]+', '', string.lower())
 
 
 """Transforms string into a list of word ids
 
 Example:
 'i like dogs' -> [41, 117, 3876]"""
-def stringToWordIds(string, wordIds):
-    stringWordIds = []
+def string_to_word_ids(string, word_ids):
+    string_word_ids = []
 
     words = string.split()
     for word in words:
         try:
-            stringWordIds.append(wordIds.index(word))
+            string_word_ids.append(word_ids.index(word))
         except ValueError:
             print('Word not found', word)
 
-    return stringWordIds
+    return string_word_ids
 
-"""Iterates through all positive and negative movie reviews and 
-transforms them into a list of word ids"""
-def reviewsToWordIds(wordIds):
-    positiveDirectory = 'data/aclImdb/train/pos'
-    negativeDirectory = 'data/aclImdb/train/neg'
 
-    positiveReviews = [os.path.join(positiveDirectory, f) for f in os.listdir(positiveDirectory)]
-    negativeReviews = [os.path.join(negativeDirectory, f) for f in os.listdir(negativeDirectory)]
+def reviews_to_dataset(word_ids):
+    positive_directory = 'data/aclImdb/train/pos'
+    negative_directory = 'data/aclImdb/train/neg'
 
-    allReviews = positiveReviews + negativeReviews
+    positive_reviews = [os.path.join(positive_directory, f) for f in os.listdir(positive_directory)]
+    negative_reviews = [os.path.join(negative_directory, f) for f in os.listdir(negative_directory)]
 
-    reviewsWordIds = []
+    dataset = []
 
-    for review in allReviews:
-        with open(review, 'r', encoding='utf-8') as fileObject:
-            for line in fileObject:
-                reviewsWordIds.append(np.array(stringToWordIds(cleanLine(line), wordIds), dtype='int32'))
+    for review in positive_reviews + negative_reviews:
+        with open(review, 'r', encoding='utf-8') as file_object:
+            review_string = ''
+            for line in file_object:
+                review_string += line
 
-    return reviewsWordIds
+            review_string = clean_string(review_string)
+            review_word_ids = string_to_word_ids(review_string, word_ids)
+            dataset.append({
+                'review': np.array(review_word_ids, dtype='int32'),
+                'label': np.array([1, 0] if review in positive_reviews else [0, 1], dtype='int32')
+            })
 
-"""Returns a list of all movie review word ids either from pre-saved .npy file or 
-by creating them from scratch"""
-def loadReviewWordIds(wordIds, force=False):
-    path = 'data/aclImdb/train/ids.npy'
+    return dataset
+
+
+def load_dataset(word_ids, force=False):
+    path = 'data/aclImdb/train/dataset.npy'
 
     if os.path.isfile(path) and not force:
-        ids = np.load(path)
+        dataset = np.load(path)
     else:
-        ids = reviewsToWordIds(wordIds)
-        np.save(path, ids)
+        dataset = reviews_to_dataset(word_ids)
+        np.save(path, dataset)
 
-    return ids
+    return dataset

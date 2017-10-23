@@ -1,11 +1,11 @@
 import os
+from random import randint
 import numpy as np
 import tensorflow as tf
-from glove import loadWordVectors
-from imdb import loadReviewWordIds
-from imdb import stringToWordIds
+from glove import load_word_vectors
+from imdb import load_dataset
 
-wordIds, wordVectors = loadWordVectors('data/glove.6B/glove.6B.50d')
+word_ids, word_vectors = load_word_vectors('data/glove.6B/glove.6B.50d')
 
 # sentence = 'I like dogs'
 # tokens = sentence.lower().split()
@@ -17,6 +17,8 @@ wordIds, wordVectors = loadWordVectors('data/glove.6B/glove.6B.50d')
 # with tf.Session() as session:
 #     print(tf.nn.embedding_lookup(wordVectors, vectorizedSentence).eval())
 
-ids = loadReviewWordIds(wordIds)
+dataset = load_dataset(word_ids)
+
+print(dataset[24999])
 
 
