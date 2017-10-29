@@ -50,7 +50,14 @@ def reviews_to_dataset(word_ids):
     return dataset
 
 
-def load_dataset(word_ids, force=False):
+def resize_dataset(dataset, max_words):
+    for item in dataset:
+        item['review'] = item['review'][:max_words]
+        negatives = np.full(max_words - item['review'].shape[0], -1, dtype='int32')
+        item['review'] = np.concatenate([item['review'], negatives])
+
+
+def load_dataset(word_ids, max_words=300, force=False):
     path = 'data/aclImdb/train/dataset.npy'
 
     if os.path.isfile(path) and not force:
@@ -59,4 +66,6 @@ def load_dataset(word_ids, force=False):
         dataset = reviews_to_dataset(word_ids)
         np.save(path, dataset)
 
+    resize_dataset(dataset, max_words)
+    
     return dataset
