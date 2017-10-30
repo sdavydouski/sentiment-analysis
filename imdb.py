@@ -25,12 +25,9 @@ def string_to_word_ids(string, word_ids):
     return string_word_ids
 
 
-def reviews_to_dataset(word_ids):
-    positive_directory = 'data/aclImdb/train/pos'
-    negative_directory = 'data/aclImdb/train/neg'
-
-    positive_reviews = [os.path.join(positive_directory, f) for f in os.listdir(positive_directory)]
-    negative_reviews = [os.path.join(negative_directory, f) for f in os.listdir(negative_directory)]
+def reviews_to_dataset(word_ids, dirs):
+    positive_reviews = [os.path.join(dirs['positive'], f) for f in os.listdir(dirs['positive'])]
+    negative_reviews = [os.path.join(dirs['negative'], f) for f in os.listdir(dirs['negative'])]
 
     dataset = []
 
@@ -50,22 +47,26 @@ def reviews_to_dataset(word_ids):
     return dataset
 
 
-def resize_dataset(dataset, max_words):
-    for item in dataset:
-        item['review'] = item['review'][:max_words]
-        negatives = np.full(max_words - item['review'].shape[0], -1, dtype='int32')
+def resize_data(data, max_sequence_length):
+    for item in data:
+        item['review'] = item['review'][:max_sequence_length]
+        negatives = np.full(max_sequence_length - item['review'].shape[0], -1, dtype='int32')
         item['review'] = np.concatenate([item['review'], negatives])
 
 
-def load_dataset(word_ids, max_words=300, force=False):
-    path = 'data/aclImdb/train/dataset.npy'
+def load_dataset(word_ids, force=False):
+    train_path = 'data/aclImdb/train/train.npy'
+    test_path = 'data/aclImdb/test/test.npy'
 
-    if os.path.isfile(path) and not force:
-        dataset = np.load(path)
+    if os.path.isfile(train_path) and os.path.isfile(test_path) and not force:
+        train = np.load(train_path)
+        test = np.load(test_path)
     else:
-        dataset = reviews_to_dataset(word_ids)
-        np.save(path, dataset)
+        train = reviews_to_dataset(word_ids, {'positive': 'data/aclImdb/train/pos',
+                                              'negative': 'data/aclImdb/train/neg'})
+        np.save(train_path, train)
+        test = reviews_to_dataset(word_ids, {'positive': 'data/aclImdb/test/pos',
+                                             'negative': 'data/aclImdb/test/neg'})
+        np.save(test_path, test)
 
-    resize_dataset(dataset, max_words)
-    
-    return dataset
+    return train, test
