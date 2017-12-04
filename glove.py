@@ -11,7 +11,7 @@ def process_glove_txt(directory, file_name):
         for line in file_object:
             tokens = line.split()
             word_ids.append(tokens[0])
-            word_vectors.append(np.array(tokens[1:]).astype(np.float))
+            word_vectors.append(np.array(tokens[1:]).astype(np.float32))
 
     directory_to_save = os.path.join(directory, os.path.splitext(file_name)[0])
     if not os.path.exists(directory_to_save):
@@ -25,7 +25,7 @@ def process_glove_txt(directory, file_name):
 def load_word_vectors(path):
     try:
         word_ids = np.load(os.path.join(path, 'word_ids.npy')).tolist()
-        word_vectors = np.load(os.path.join(path, 'word_vectors.npy'))
+        word_vectors = np.load(os.path.join(path, 'word_vectors.npy')) .astype(np.float32)
     except FileNotFoundError:
         print('.npy files were not found. Ensure you\'ve called process_glove_txt first.')
         raise
